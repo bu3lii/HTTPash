@@ -30,6 +30,29 @@ while IFS= read -r line; do
     [[ "${line%$'\r'}" == "" ]] && break
 done
 
+case "$method" in
+    GET|HEAD)
+    ;;
+
+    POST|PUT|PATCH|DELETE|OPTIONS)
+        printf 'HTTP/1.1 405 Method Not Allowed\r\n'
+        printf 'Allow: GET, HEAD\r\n'
+        printf 'Content-Length: 0\r\n'
+        printf 'Connection: close\r\n'
+        printf '\r\n'
+        exit 0
+    ;;
+
+    *)
+        printf 'HTTP/1.1 501 Not Implemented\r\n'
+        printf 'Content-Length: 0\r\n'
+        printf 'Connection: close\r\n'
+        printf '\r\n'
+        exit 0
+    ;;
+
+esac
+
 printf 'Method: %s\n' "$method" >&2
 printf 'Path: %s\n' "$path" >&2
 printf 'Version: %s\n' "$version" >&2
@@ -41,4 +64,7 @@ printf 'Content-Type: text/plain\r\n'
 printf 'Content-Length: %d\r\n' "${#body}"
 printf 'Connection: close\r\n'
 printf '\r\n'
-printf '%s' "$body"
+
+if [[ "$method" != "HEAD" ]]; then
+    printf '%s' "$body"
+fi
