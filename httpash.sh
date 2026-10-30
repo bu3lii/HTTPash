@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 
-# HTTPash v0.1.0
+# HTTPash v0.1.1
 
 IFS= read -r request_line || exit 0
 
 request_line=${request_line%$'\r'}
 
 read -r method path version <<< "$request_line"
+
+if [[ "$version" != "HTTP/1.1" ]]; then
+    printf 'HTTP/1.1 505 HTTP Version Not Supported\r\n'
+    printf 'Content-Length: 0\r\n'
+    printf 'Connection: close\r\n'
+    printf '\r\n'
+    exit 0
+fi
 
 while IFS= read -r line; do
     [[ "${line%$'\r'}" == "" ]] && break
