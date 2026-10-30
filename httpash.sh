@@ -6,7 +6,17 @@ IFS= read -r request_line || exit 0
 
 request_line=${request_line%$'\r'}
 
-read -r method path version <<< "$request_line"
+if [[ "$request_line" =~ ^([^[:space:]]+)\ (/[^[:space:]]*)\ (HTTP/[0-9]+\.[0-9]+)$ ]]; then
+    method="${BASH_REMATCH[1]}"
+    path="${BASH_REMATCH[2]}"
+    version="${BASH_REMATCH[3]}"
+else
+    printf 'HTTP/1.1 400 Bad Request\r\n'
+    printf 'Content-Length: 0 \r\n'
+    printf 'Connection: close\r\n'
+    printf '\r\n'
+    exit 0
+fi
 
 if [[ "$version" != "HTTP/1.1" ]]; then
     printf 'HTTP/1.1 505 HTTP Version Not Supported\r\n'
